@@ -1,0 +1,384 @@
+/* Reset and base styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  direction: rtl;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+    Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+body {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  height: 100vh;
+  padding: 0.5rem;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Container */
+.container {
+  max-width: 1200px;
+  width: 100%;
+  max-height: 95vh;
+  overflow-y: auto;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  padding: 1rem;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e0 #f7fafc;
+}
+
+.container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.container::-webkit-scrollbar-track {
+  background: #f7fafc;
+  border-radius: 4px;
+}
+
+.container::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 4px;
+}
+
+.container::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
+
+/* Header */
+.header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  gap: 1rem;
+}
+
+h1 {
+  color: #2d3748;
+  font-size: 1.5rem;
+  margin: 0;
+  flex: 1;
+  text-align: center;
+}
+
+.clear-button {
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #f56565 0%, #c53030 100%);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  white-space: nowrap;
+}
+
+.clear-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(245, 101, 101, 0.4);
+}
+
+.clear-button:active {
+  transform: translateY(0);
+}
+
+/* Sections */
+.section {
+  margin-bottom: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 6px;
+  background: #f7fafc;
+  border: 2px solid #e2e8f0;
+}
+
+.section h2 {
+  color: #2d3748;
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 2px solid #cbd5e0;
+}
+
+.section-equity {
+  border-color: #4299e1;
+  background: #ebf8ff;
+}
+
+.section-purchase {
+  border-color: #48bb78;
+  background: #f0fff4;
+}
+
+.section-mortgage {
+  border-color: #ed8936;
+  background: #fffaf0;
+}
+
+.section-summary {
+  border-color: #9f7aea;
+  background: #faf5ff;
+}
+
+/* Form groups */
+.form-group {
+  margin-bottom: 0.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-weight: 600;
+  color: #2d3748;
+  font-size: 0.875rem;
+}
+
+.form-group input[type='number'],
+.form-group input[type='text'] {
+  width: 100%;
+  padding: 0.5rem;
+  border: 2px solid #cbd5e0;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  text-align: right;
+  transition: border-color 0.2s;
+}
+
+.form-group input[type='number']:focus,
+.form-group input[type='text']:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+/* Checkbox */
+.checkbox-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.checkbox-group input[type='checkbox'] {
+  width: 1rem;
+  height: 1rem;
+  cursor: pointer;
+}
+
+.checkbox-group label {
+  font-weight: 600;
+  color: #2d3748;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+/* Results display */
+.result-display {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 0.5rem;
+  border-radius: 4px;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.result-display.large {
+  font-size: 1rem;
+  padding: 0.6rem;
+}
+
+/* Summary grid */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.summary-item {
+  background: white;
+  padding: 0.5rem;
+  border-radius: 4px;
+  border: 2px solid #e2e8f0;
+}
+
+.summary-item .label {
+  font-size: 0.75rem;
+  color: #718096;
+  margin-bottom: 0.25rem;
+}
+
+.summary-item .value {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #2d3748;
+}
+
+/* Help text */
+.help-text {
+  font-size: 0.75rem;
+  color: #718096;
+  margin-top: 0.15rem;
+  font-style: italic;
+}
+
+/* Mode indicator */
+.mode-indicator {
+  display: inline-block;
+  padding: 0.35rem 0.75rem;
+  border-radius: 15px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-top: 0.25rem;
+}
+
+.mode-indicator.from-price {
+  background: #c6f6d5;
+  color: #22543d;
+}
+
+.mode-indicator.from-mortgage {
+  background: #fed7d7;
+  color: #742a2a;
+}
+
+/* Mortgage header - with mode indicator */
+.mortgage-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.mortgage-header h2 {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+/* Mortgage grid - horizontal layout */
+.mortgage-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 0.8fr 0.6fr 1.5fr;
+  gap: 0.75rem;
+  align-items: end;
+}
+
+.mortgage-result {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.mortgage-result .result-display {
+  margin-top: 0;
+}
+
+/* Main layout - two columns for larger screens */
+.main-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.main-layout > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.main-layout .section {
+  margin-bottom: 0;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .main-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .mortgage-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .mortgage-result {
+    grid-column: 1 / -1;
+  }
+
+  body {
+    align-items: flex-start;
+    overflow-y: auto;
+  }
+
+  .container {
+    max-height: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 0.5rem;
+  }
+
+  .header-bar {
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  h1 {
+    font-size: 1.25rem;
+  }
+
+  .clear-button {
+    width: 100%;
+  }
+
+  .section {
+    padding: 0.5rem;
+  }
+
+  .section h2 {
+    font-size: 1rem;
+  }
+
+  .mortgage-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mortgage-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mortgage-result {
+    grid-column: auto;
+  }
+
+  body {
+    padding: 0.25rem;
+  }
+}

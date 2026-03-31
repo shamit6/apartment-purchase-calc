@@ -1,0 +1,385 @@
+---
+import '../styles/calculator.css';
+---
+
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="מחשבון רכישת דירה - חישוב הון עצמי, משכנתא והוצאות רכישה" />
+    <title>מחשבון רכישת דירה</title>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header-bar">
+        <h1>מחשבון רכישת דירה</h1>
+        <button id="clearButton" class="clear-button">נקה הכל</button>
+      </div>
+
+      <div class="main-layout">
+        <!-- Left Column: Equity -->
+        <div>
+          <!-- Part 1: Equity Calculation -->
+          <section class="section section-equity">
+            <h2>הון עצמי</h2>
+
+            <div class="form-group">
+              <label for="currentApartmentValue">שווי דירה נוכחית</label>
+              <input
+                type="text"
+                inputmode="numeric"
+                id="currentApartmentValue"
+                data-field="currentApartmentValue"
+                placeholder="0"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="studyFundAmount">קרן השתלמות</label>
+              <input
+                type="text"
+                inputmode="numeric"
+                id="studyFundAmount"
+                data-field="studyFundAmount"
+                placeholder="0"
+              />
+            </div>
+
+            <div class="checkbox-group">
+              <input
+                type="checkbox"
+                id="studyFundLoan"
+                data-field="studyFundLoan"
+              />
+              <label for="studyFundLoan">לקיחת הלוואה (60%)</label>
+            </div>
+
+            <div class="form-group">
+              <label for="otherSavings">חסכונות אחרים</label>
+              <input
+                type="text"
+                inputmode="numeric"
+                id="otherSavings"
+                data-field="otherSavings"
+                placeholder="0"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="currentMortgage">משכנתא קיימת (מנוכה)</label>
+              <input
+                type="text"
+                inputmode="numeric"
+                id="currentMortgage"
+                data-field="currentMortgage"
+                placeholder="0"
+              />
+            </div>
+
+            <div class="result-display large">
+              <div>סה"כ הון עצמי: <span id="equityResult">₪0</span></div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Right Column: Purchase Expenses -->
+        <div>
+          <section class="section section-purchase">
+            <h2>הוצאות רכישה</h2>
+
+            <div class="form-group">
+              <label for="apartmentPrice">מחיר דירה</label>
+              <input
+                type="text"
+                inputmode="numeric"
+                id="apartmentPrice"
+                data-field="apartmentPrice"
+                placeholder="0"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="brokerageFeeRate">אחוז דמי תיווך</label>
+              <input
+                type="text"
+                id="brokerageFeeRate"
+                data-field="brokerageFeeRate"
+                value="2"
+              />
+              <div class="help-text">ברירת מחדל 2%, ניתן לשינוי</div>
+            </div>
+
+            <div class="result-display">
+              <div>דמי תיווך (+ מע"ם): <span id="brokerageFeeResult">₪0</span></div>
+            </div>
+
+            <div class="result-display">
+              <div>מס רכישה: <span id="purchaseTaxResult">₪0</span></div>
+            </div>
+
+            <div class="form-group">
+              <label for="additionalCosts">הוצאות נוספות (עו"ד וכו')</label>
+              <input
+                type="text"
+                inputmode="numeric"
+                id="additionalCosts"
+                data-field="additionalCosts"
+                placeholder="0"
+              />
+            </div>
+
+            <div class="result-display large">
+              <div>סה"כ עלות רכישה: <span id="totalCostResult">₪0</span></div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Full Width: Mortgage Calculation -->
+        <section class="section section-mortgage full-width">
+          <div class="mortgage-header">
+            <h2>משכנתא</h2>
+            <div id="modeIndicator"></div>
+          </div>
+
+          <div class="mortgage-grid">
+            <div class="form-group">
+              <label for="mortgageAmount">סכום משכנתא</label>
+              <input
+                type="text"
+                inputmode="numeric"
+                id="mortgageAmount"
+                data-field="mortgageAmount"
+                placeholder="0"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="interestRate">ריבית שנתית (%)</label>
+              <input
+                type="text"
+                id="interestRate"
+                data-field="interestRate"
+                value="4.5"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="loanYears">שנים</label>
+              <input
+                type="text"
+                inputmode="numeric"
+                id="loanYears"
+                data-field="loanYears"
+                value="30"
+              />
+            </div>
+
+            <div class="mortgage-result">
+              <div class="result-display">
+                <div>החזר חודשי: <span id="monthlyPaymentResult">₪0</span></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Full Width: Summary Section -->
+        <section class="section section-summary full-width">
+          <h2>סיכום</h2>
+          <div class="summary-grid">
+            <div class="summary-item">
+              <div class="label">מחיר דירה</div>
+              <div class="value" id="summaryApartmentPrice">₪0</div>
+            </div>
+            <div class="summary-item">
+              <div class="label">הון עצמי</div>
+              <div class="value" id="summaryEquity">₪0</div>
+            </div>
+            <div class="summary-item">
+              <div class="label">משכנתא נדרשת</div>
+              <div class="value" id="summaryMortgage">₪0</div>
+            </div>
+            <div class="summary-item">
+              <div class="label">סך הכל עלות</div>
+              <div class="value" id="summaryTotalCost">₪0</div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <script>
+      import { StateManager } from '../scripts/state-manager';
+      import { formatCurrency, parseCurrency, parsePercent } from '../scripts/formatters';
+
+      // Initialize state manager
+      const stateManager = new StateManager();
+
+      // Get all input elements
+      const inputs = document.querySelectorAll('input[data-field]');
+
+      // Populate initial values from loaded state
+      const initialState = stateManager.getState();
+      inputs.forEach((input) => {
+        const field = input.getAttribute('data-field') as keyof typeof initialState;
+        const inputElement = input as HTMLInputElement;
+
+        if (input.type === 'checkbox') {
+          inputElement.checked = initialState[field] as boolean;
+        } else if (field === 'brokerageFeeRate') {
+          inputElement.value = String((initialState[field] as number) * 100);
+        } else if (field === 'interestRate') {
+          inputElement.value = String((initialState[field] as number) * 100);
+        } else if (field === 'loanYears') {
+          inputElement.value = String(initialState[field]);
+        } else {
+          const value = initialState[field] as number;
+          if (value > 0) {
+            inputElement.value = value.toLocaleString('he-IL');
+          }
+        }
+      });
+
+      // Attach event listeners to inputs
+      inputs.forEach((input) => {
+        const field = input.getAttribute('data-field') as keyof typeof stateManager.getState;
+
+        if (input.type === 'checkbox') {
+          input.addEventListener('change', (e) => {
+            const checked = (e.target as HTMLInputElement).checked;
+            stateManager.updateField(field, checked);
+          });
+        } else if (input.type === 'text' && field === 'brokerageFeeRate') {
+          // Handle brokerage percentage field
+          input.addEventListener('input', (e) => {
+            const value = parsePercent((e.target as HTMLInputElement).value);
+            stateManager.updateField(field, value);
+          });
+        } else if (input.type === 'text' && field === 'interestRate') {
+          // Handle interest rate percentage field
+          input.addEventListener('input', (e) => {
+            const value = parsePercent((e.target as HTMLInputElement).value);
+            stateManager.updateField(field, value);
+          });
+        } else if (input.type === 'text' && field === 'loanYears') {
+          // Handle loan years - just parse as number
+          input.addEventListener('input', (e) => {
+            const inputElement = e.target as HTMLInputElement;
+            const value = parseInt(inputElement.value) || 0;
+            stateManager.updateField(field, value);
+          });
+        } else if (input.type === 'text') {
+          // Handle all numeric text fields
+          input.addEventListener('input', (e) => {
+            const inputElement = e.target as HTMLInputElement;
+            const value = parseCurrency(inputElement.value);
+            stateManager.updateField(field, value);
+          });
+
+          // Format on blur
+          input.addEventListener('blur', (e) => {
+            const inputElement = e.target as HTMLInputElement;
+            const inputValue = inputElement.value.trim();
+
+            // If field is empty, leave it empty
+            if (inputValue === '') {
+              return;
+            }
+
+            // Parse and format the value
+            const value = parseCurrency(inputValue);
+
+            // Only clear if the parsed value is 0 AND user explicitly typed "0"
+            if (value === 0 && inputValue === '0') {
+              inputElement.value = '';
+              return;
+            }
+
+            // Format any non-zero value
+            if (value > 0) {
+              const formatted = value.toLocaleString('he-IL');
+              inputElement.value = formatted;
+            }
+          });
+        }
+      });
+
+      // Clear button handler
+      document.getElementById('clearButton')!.addEventListener('click', () => {
+        if (confirm('האם אתה בטוח שברצונך לנקות את כל הנתונים?')) {
+          stateManager.clearAll();
+
+          // Clear all input fields
+          inputs.forEach((input) => {
+            const inputElement = input as HTMLInputElement;
+            const field = input.getAttribute('data-field') as string;
+
+            if (input.type === 'checkbox') {
+              inputElement.checked = false;
+            } else if (field === 'brokerageFeeRate') {
+              inputElement.value = '2';
+            } else if (field === 'interestRate') {
+              inputElement.value = '4.5';
+            } else if (field === 'loanYears') {
+              inputElement.value = '30';
+            } else {
+              inputElement.value = '';
+            }
+          });
+        }
+      });
+
+      // Subscribe to state changes and update UI
+      stateManager.subscribe((state) => {
+        const results = state.results;
+
+        if (!results) {
+          return;
+        }
+
+        // Update result displays
+        document.getElementById('equityResult')!.textContent = formatCurrency(results.equity);
+        document.getElementById('brokerageFeeResult')!.textContent = formatCurrency(results.brokerageFee);
+        document.getElementById('purchaseTaxResult')!.textContent = formatCurrency(results.purchaseTax);
+        document.getElementById('totalCostResult')!.textContent = formatCurrency(results.totalPurchaseCost);
+        document.getElementById('monthlyPaymentResult')!.textContent = formatCurrency(results.monthlyPayment);
+
+        // Update summary section
+        document.getElementById('summaryApartmentPrice')!.textContent = formatCurrency(results.apartmentPrice);
+        document.getElementById('summaryEquity')!.textContent = formatCurrency(results.equity);
+        document.getElementById('summaryMortgage')!.textContent = formatCurrency(results.mortgage);
+        document.getElementById('summaryTotalCost')!.textContent = formatCurrency(results.totalPurchaseCost);
+
+        // Update mode indicator
+        const modeIndicator = document.getElementById('modeIndicator')!;
+        if (state.mode === 'FROM_APARTMENT_PRICE') {
+          modeIndicator.innerHTML = '<span class="mode-indicator from-price">חישוב ממחיר דירה</span>';
+        } else {
+          modeIndicator.innerHTML = '<span class="mode-indicator from-mortgage">חישוב מסכום משכנתא</span>';
+        }
+
+        // Update input fields (for bidirectional calculation)
+        const apartmentPriceInput = document.getElementById('apartmentPrice') as HTMLInputElement;
+        const mortgageAmountInput = document.getElementById('mortgageAmount') as HTMLInputElement;
+
+        // Only update if not currently focused and value has changed
+        if (state.mode === 'FROM_MORTGAGE' && document.activeElement !== apartmentPriceInput) {
+          const newValue = results.apartmentPrice > 0 ? results.apartmentPrice.toLocaleString('he-IL') : '';
+          if (apartmentPriceInput.value !== newValue) {
+            apartmentPriceInput.value = newValue;
+          }
+        }
+
+        if (state.mode === 'FROM_APARTMENT_PRICE' && document.activeElement !== mortgageAmountInput) {
+          const newValue = results.mortgage > 0 ? results.mortgage.toLocaleString('he-IL') : '';
+          if (mortgageAmountInput.value !== newValue) {
+            mortgageAmountInput.value = newValue;
+          }
+        }
+      });
+
+      // Initial calculation
+      stateManager.forceRecalculate();
+    </script>
+  </body>
+</html>
