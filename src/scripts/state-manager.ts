@@ -168,10 +168,16 @@ export class StateManager {
     this.recalculate();
 
     // If user changed something other than mortgage, update mortgage to required amount
-    // This ensures mortgage field reflects what's needed for the new apartment price
-    // But if user manually changed mortgage, keep their value to show balance impact
+    // and recalculate again to ensure balance/monthly payment are correct
     if (field !== 'mortgageAmount' && this.state.results) {
-      this.state.mortgageAmount = this.state.results.mortgage;
+      const oldMortgage = this.state.mortgageAmount;
+      const newMortgage = this.state.results.mortgage;
+
+      // Only recalculate if mortgage amount actually changed
+      if (Math.abs(oldMortgage - newMortgage) > 0.01) {
+        this.state.mortgageAmount = newMortgage;
+        this.recalculate();
+      }
     }
 
     // Notify listeners

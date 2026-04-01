@@ -137,7 +137,8 @@ export function calculateFromApartmentPrice(
     purchaseInputs.brokerageFeeRate,
     purchaseInputs.additionalCosts
   );
-  const mortgage = totalPurchaseCost - equity;
+  // Mortgage cannot be negative - if equity covers everything, no mortgage needed
+  const mortgage = Math.max(0, totalPurchaseCost - equity);
 
   // Calculate monthly payment based on user's mortgage input (if set) or calculated mortgage
   // State manager syncs mortgageAmount to required mortgage when other fields change
