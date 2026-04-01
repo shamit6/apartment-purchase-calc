@@ -41,6 +41,8 @@ export class StateManager {
   private state: State;
   private listeners: Set<StateListener> = new Set();
   private isUpdating = false; // Prevent circular updates
+  private mortgageManuallySet = false; // Track if user manually set mortgage
+  private loadedFromUrl = false; // Track if loaded from URL params
 
   constructor() {
     // Default state
@@ -61,7 +63,16 @@ export class StateManager {
     };
 
     // Try to load from URL params first, then localStorage
-    this.state = this.loadFromUrlParams() || this.loadFromStorage() || defaultState;
+    const loadedState = this.loadFromUrlParams();
+    if (loadedState) {
+      this.state = loadedState;
+      this.loadedFromUrl = true;
+      // Don't mark mortgage as manually set - allow it to auto-sync
+      this.mortgageManuallySet = false;
+    } else {
+      this.state = this.loadFromStorage() || defaultState;
+      this.loadedFromUrl = false;
+    }
   }
 
   /**
@@ -119,6 +130,11 @@ export class StateManager {
    * Save state to localStorage
    */
   private saveToStorage(): void {
+    // Don't save to localStorage if we just loaded from URL (until user makes a change)
+    if (this.loadedFromUrl) {
+      return;
+    }
+
     try {
       // Don't save results, only input values
       const toSave = { ...this.state };
@@ -148,6 +164,10 @@ export class StateManager {
       mode: 'FROM_APARTMENT_PRICE',
       results: null,
     };
+
+    // Reset flags
+    this.mortgageManuallySet = false;
+    this.loadedFromUrl = false;
 
     // Clear localStorage
     try {
@@ -191,8 +211,18 @@ export class StateManager {
 
     this.isUpdating = true;
 
+    // First user change after URL load - clear the flag so we start saving to localStorage
+    if (this.loadedFromUrl) {
+      this.loadedFromUrl = false;
+    }
+
     // Update the field
     (this.state as any)[field] = value;
+
+    // Track if user manually set mortgage amount
+    if (field === 'mortgageAmount') {
+      this.mortgageManuallySet = true;
+    }
 
     // Always calculate from apartment price (no bidirectional mode)
     this.state.mode = 'FROM_APARTMENT_PRICE';
@@ -200,9 +230,9 @@ export class StateManager {
     // Recalculate
     this.recalculate();
 
-    // If user changed something other than mortgage, update mortgage to required amount
-    // and recalculate again to ensure balance/monthly payment are correct
-    if (field !== 'mortgageAmount' && this.state.results) {
+    // If user changed something other than mortgage AND hasn't manually set mortgage,
+    // update mortgage to required amount and recalculate again
+    if (field !== 'mortgageAmount' && !this.mortgageManuallySet && this.state.results) {
       const oldMortgage = this.state.mortgageAmount;
       const newMortgage = this.state.results.mortgage;
 
@@ -216,7 +246,7 @@ export class StateManager {
     // Notify listeners
     this.notify();
 
-    // Save to localStorage
+    // Save to localStorage (only if not loaded from URL, or after first change)
     this.saveToStorage();
 
     this.isUpdating = false;

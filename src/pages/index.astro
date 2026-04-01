@@ -315,12 +315,24 @@ import '../styles/calculator.css';
         const shareUrl = stateManager.getShareableUrl();
 
         try {
-          // Try to use the Clipboard API
-          await navigator.clipboard.writeText(shareUrl);
-          alert('הקישור הועתק ללוח! ניתן להדביק ולשתף אותו עם אחרים.');
+          // Try to use the Web Share API (better for mobile)
+          if (navigator.share) {
+            await navigator.share({
+              title: 'מחשבון רכישת דירה',
+              text: 'החישוב שלי לרכישת דירה',
+              url: shareUrl,
+            });
+          } else {
+            // Fallback: copy to clipboard
+            await navigator.clipboard.writeText(shareUrl);
+            alert('הקישור הועתק ללוח! ניתן להדביק ולשתף אותו עם אחרים.');
+          }
         } catch (err) {
-          // Fallback: show the URL in a prompt
-          prompt('העתק את הקישור:', shareUrl);
+          // Final fallback: show the URL in a prompt
+          if (err instanceof Error && err.name !== 'AbortError') {
+            prompt('העתק את הקישור:', shareUrl);
+          }
+          // If AbortError (user cancelled share dialog), do nothing
         }
       });
 
@@ -393,22 +405,14 @@ import '../styles/calculator.css';
           summaryBalance.textContent = formatCurrency(results.balance);
         }
 
-        // Update input fields (for bidirectional calculation)
-        const apartmentPriceInput = document.getElementById('apartmentPrice') as HTMLInputElement;
+        // Update mortgage input field to reflect state value (not calculated required amount)
         const mortgageAmountInput = document.getElementById('mortgageAmount') as HTMLInputElement;
 
-        // Only update if not currently focused and value has changed
-        if (state.mode === 'FROM_MORTGAGE' && document.activeElement !== apartmentPriceInput) {
-          const newValue = results.apartmentPrice > 0 ? results.apartmentPrice.toLocaleString('he-IL') : '';
-          if (apartmentPriceInput.value !== newValue) {
-            apartmentPriceInput.value = newValue;
-          }
-        }
-
-        if (state.mode === 'FROM_APARTMENT_PRICE' && document.activeElement !== mortgageAmountInput) {
-          const newValue = results.mortgage > 0 ? results.mortgage.toLocaleString('he-IL') : '';
-          if (mortgageAmountInput.value !== newValue) {
-            mortgageAmountInput.value = newValue;
+        // Only update if not currently focused
+        if (document.activeElement !== mortgageAmountInput) {
+          const stateValue = state.mortgageAmount > 0 ? state.mortgageAmount.toLocaleString('he-IL') : '';
+          if (mortgageAmountInput.value !== stateValue) {
+            mortgageAmountInput.value = stateValue;
           }
         }
       });
