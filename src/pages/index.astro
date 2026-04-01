@@ -52,7 +52,7 @@ import '../styles/calculator.css';
                 id="studyFundLoan"
                 data-field="studyFundLoan"
               />
-              <label for="studyFundLoan">לקיחת הלוואה (60%)</label>
+              <label for="studyFundLoan">לקיחת הלוואה כנגד (60%)</label>
             </div>
 
             <div class="form-group">
@@ -137,10 +137,7 @@ import '../styles/calculator.css';
 
         <!-- Full Width: Mortgage Calculation -->
         <section class="section section-mortgage full-width">
-          <div class="mortgage-header">
-            <h2>משכנתא</h2>
-            <div id="modeIndicator"></div>
-          </div>
+          <h2>משכנתא</h2>
 
           <div class="mortgage-grid">
             <div class="form-group">
@@ -202,6 +199,10 @@ import '../styles/calculator.css';
             <div class="summary-item">
               <div class="label">סך הכל עלות</div>
               <div class="value" id="summaryTotalCost">₪0</div>
+            </div>
+            <div class="summary-item" id="summaryBalanceItem">
+              <div class="label">יתרה לאחר רכישה</div>
+              <div class="value" id="summaryBalance">₪0</div>
             </div>
           </div>
         </section>
@@ -350,12 +351,27 @@ import '../styles/calculator.css';
         document.getElementById('summaryMortgage')!.textContent = formatCurrency(results.mortgage);
         document.getElementById('summaryTotalCost')!.textContent = formatCurrency(results.totalPurchaseCost);
 
-        // Update mode indicator
-        const modeIndicator = document.getElementById('modeIndicator')!;
-        if (state.mode === 'FROM_APARTMENT_PRICE') {
-          modeIndicator.innerHTML = '<span class="mode-indicator from-price">חישוב ממחיר דירה</span>';
+        // Update balance in summary with color coding
+        const summaryBalance = document.getElementById('summaryBalance')!;
+        const summaryBalanceItem = document.getElementById('summaryBalanceItem')!;
+
+        // Color code based on positive (green) or negative (red) balance
+        if (results.balance > 100) {
+          summaryBalanceItem.style.borderColor = '#48bb78';
+          summaryBalanceItem.style.background = '#f0fff4';
+          summaryBalance.style.color = '#22543d';
+          summaryBalance.textContent = '+' + formatCurrency(results.balance);
+        } else if (results.balance < -100) {
+          summaryBalanceItem.style.borderColor = '#f56565';
+          summaryBalanceItem.style.background = '#fff5f5';
+          summaryBalance.style.color = '#c53030';
+          summaryBalance.textContent = formatCurrency(results.balance);
         } else {
-          modeIndicator.innerHTML = '<span class="mode-indicator from-mortgage">חישוב מסכום משכנתא</span>';
+          // Near zero, use default styling
+          summaryBalanceItem.style.borderColor = '#e2e8f0';
+          summaryBalanceItem.style.background = 'white';
+          summaryBalance.style.color = '#2d3748';
+          summaryBalance.textContent = formatCurrency(results.balance);
         }
 
         // Update input fields (for bidirectional calculation)

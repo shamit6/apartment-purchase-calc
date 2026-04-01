@@ -22,6 +22,7 @@ export interface CalculationResult {
   mortgage: number;
   apartmentPrice: number;
   monthlyPayment: number;
+  balance: number; // Money left after purchase (can be positive or negative)
 }
 
 /**
@@ -122,7 +123,8 @@ export function calculateFromApartmentPrice(
   equityInputs: EquityInputs,
   purchaseInputs: PurchaseInputs,
   interestRate: number,
-  loanYears: number
+  loanYears: number,
+  userMortgageInput: number
 ): CalculationResult {
   const equity = calculateEquity(equityInputs);
   const brokerageFee = calculateBrokerageFee(
@@ -136,7 +138,16 @@ export function calculateFromApartmentPrice(
     purchaseInputs.additionalCosts
   );
   const mortgage = totalPurchaseCost - equity;
-  const monthlyPayment = calculateMonthlyPayment(mortgage, interestRate, loanYears);
+
+  // Calculate monthly payment based on user's mortgage input (if set) or calculated mortgage
+  // State manager syncs mortgageAmount to required mortgage when other fields change
+  // But keeps user's value when they manually change mortgage
+  const mortgageForPayment = userMortgageInput > 0 ? userMortgageInput : mortgage;
+  const monthlyPayment = calculateMonthlyPayment(mortgageForPayment, interestRate, loanYears);
+
+  // Balance: if user sets mortgage different from calculated, show the difference
+  // Positive = extra money after purchase, Negative = need more money
+  const balance = (equity + userMortgageInput) - totalPurchaseCost;
 
   return {
     equity,
@@ -146,6 +157,7 @@ export function calculateFromApartmentPrice(
     mortgage,
     apartmentPrice: purchaseInputs.apartmentPrice,
     monthlyPayment,
+    balance,
   };
 }
 
@@ -198,7 +210,11 @@ export function calculateFromMortgage(
     additionalCosts
   );
   const mortgage = totalPurchaseCost - equity;
-  const monthlyPayment = calculateMonthlyPayment(mortgage, interestRate, loanYears);
+  const monthlyPayment = calculateMonthlyPayment(targetMortgage, interestRate, loanYears);
+
+  // Balance: extra money available after purchase
+  // Positive = money left over, Negative = need more money
+  const balance = (equity + targetMortgage) - totalPurchaseCost;
 
   return {
     equity,
@@ -208,5 +224,6 @@ export function calculateFromMortgage(
     mortgage,
     apartmentPrice: Math.round(estimatedPrice),
     monthlyPayment,
+    balance,
   };
 }

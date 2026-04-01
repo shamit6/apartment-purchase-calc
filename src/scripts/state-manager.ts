@@ -161,15 +161,18 @@ export class StateManager {
     // Update the field
     (this.state as any)[field] = value;
 
-    // Determine calculation mode based on which field changed
-    if (field === 'apartmentPrice') {
-      this.state.mode = 'FROM_APARTMENT_PRICE';
-    } else if (field === 'mortgageAmount') {
-      this.state.mode = 'FROM_MORTGAGE';
-    }
+    // Always calculate from apartment price (no bidirectional mode)
+    this.state.mode = 'FROM_APARTMENT_PRICE';
 
     // Recalculate
     this.recalculate();
+
+    // If user changed something other than mortgage, update mortgage to required amount
+    // This ensures mortgage field reflects what's needed for the new apartment price
+    // But if user manually changed mortgage, keep their value to show balance impact
+    if (field !== 'mortgageAmount' && this.state.results) {
+      this.state.mortgageAmount = this.state.results.mortgage;
+    }
 
     // Notify listeners
     this.notify();
@@ -192,36 +195,19 @@ export class StateManager {
       currentMortgage: this.state.currentMortgage,
     };
 
-    if (this.state.mode === 'FROM_APARTMENT_PRICE') {
-      const purchaseInputs: PurchaseInputs = {
-        apartmentPrice: this.state.apartmentPrice,
-        brokerageFeeRate: this.state.brokerageFeeRate,
-        additionalCosts: this.state.additionalCosts,
-      };
+    const purchaseInputs: PurchaseInputs = {
+      apartmentPrice: this.state.apartmentPrice,
+      brokerageFeeRate: this.state.brokerageFeeRate,
+      additionalCosts: this.state.additionalCosts,
+    };
 
-      this.state.results = calculateFromApartmentPrice(
-        equityInputs,
-        purchaseInputs,
-        this.state.interestRate,
-        this.state.loanYears
-      );
-
-      // Update mortgage amount field to match calculation
-      this.state.mortgageAmount = this.state.results.mortgage;
-    } else {
-      // FROM_MORTGAGE mode
-      this.state.results = calculateFromMortgage(
-        equityInputs,
-        this.state.mortgageAmount,
-        this.state.brokerageFeeRate,
-        this.state.additionalCosts,
-        this.state.interestRate,
-        this.state.loanYears
-      );
-
-      // Update apartment price field to match calculation
-      this.state.apartmentPrice = this.state.results.apartmentPrice;
-    }
+    this.state.results = calculateFromApartmentPrice(
+      equityInputs,
+      purchaseInputs,
+      this.state.interestRate,
+      this.state.loanYears,
+      this.state.mortgageAmount
+    );
   }
 
   /**
