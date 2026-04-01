@@ -56,14 +56,18 @@ import '../styles/calculator.css';
             </div>
 
             <div class="form-group">
-              <label for="otherSavings">חסכונות אחרים</label>
-              <input
-                type="text"
-                inputmode="numeric"
-                id="otherSavings"
-                data-field="otherSavings"
-                placeholder="0"
-              />
+              <label class="collapsable-label" id="otherSavingsLabel">
+                <span>חסכונות אחרים</span>
+                <span class="collapse-arrow">▼</span>
+              </label>
+              <div id="otherSavingsTotal" class="savings-total">₪0</div>
+
+              <div id="otherSavingsDetails" class="savings-details collapsed">
+                <div id="savingsList" class="savings-list">
+                  <!-- Savings items will be added here dynamically -->
+                </div>
+                <button type="button" id="addSavingsButton" class="add-savings-button">+ הוסף חיסכון</button>
+              </div>
             </div>
 
             <div class="form-group">
@@ -224,6 +228,94 @@ import '../styles/calculator.css';
       // Get all input elements
       const inputs = document.querySelectorAll('input[data-field]');
 
+      // Render savings list
+      function renderSavingsList() {
+        const savingsList = document.getElementById('savingsList')!;
+        const state = stateManager.getState();
+
+        savingsList.innerHTML = '';
+
+        state.otherSavingsList.forEach((item) => {
+          const itemDiv = document.createElement('div');
+          itemDiv.className = 'savings-item';
+          itemDiv.innerHTML = `
+            <input
+              type="text"
+              class="savings-name"
+              placeholder="שם החיסכון"
+              value="${item.name}"
+              data-savings-id="${item.id}"
+            />
+            <input
+              type="text"
+              inputmode="numeric"
+              class="savings-amount"
+              placeholder="0"
+              value="${item.amount > 0 ? item.amount.toLocaleString('he-IL') : ''}"
+              data-savings-id="${item.id}"
+            />
+            <button type="button" class="remove-savings-button" data-savings-id="${item.id}">×</button>
+          `;
+          savingsList.appendChild(itemDiv);
+        });
+
+        // Add event listeners to savings inputs
+        savingsList.querySelectorAll('.savings-name').forEach((input) => {
+          input.addEventListener('input', (e) => {
+            const target = e.target as HTMLInputElement;
+            const id = target.dataset.savingsId!;
+            const name = target.value;
+            const amountInput = savingsList.querySelector(`.savings-amount[data-savings-id="${id}"]`) as HTMLInputElement;
+            const amount = parseCurrency(amountInput.value);
+            stateManager.updateSavingsItem(id, name, amount);
+          });
+        });
+
+        savingsList.querySelectorAll('.savings-amount').forEach((input) => {
+          input.addEventListener('input', (e) => {
+            const target = e.target as HTMLInputElement;
+            const id = target.dataset.savingsId!;
+            const amount = parseCurrency(target.value);
+            const nameInput = savingsList.querySelector(`.savings-name[data-savings-id="${id}"]`) as HTMLInputElement;
+            const name = nameInput.value;
+            stateManager.updateSavingsItem(id, name, amount);
+          });
+
+          // Format on blur
+          input.addEventListener('blur', (e) => {
+            const target = e.target as HTMLInputElement;
+            const value = parseCurrency(target.value);
+            if (value > 0) {
+              target.value = value.toLocaleString('he-IL');
+            } else {
+              target.value = '';
+            }
+          });
+        });
+
+        savingsList.querySelectorAll('.remove-savings-button').forEach((button) => {
+          button.addEventListener('click', (e) => {
+            const target = e.target as HTMLButtonElement;
+            const id = target.dataset.savingsId!;
+            stateManager.removeSavingsItem(id);
+          });
+        });
+      }
+
+      // Collapsable section toggle
+      document.getElementById('otherSavingsLabel')!.addEventListener('click', () => {
+        const details = document.getElementById('otherSavingsDetails')!;
+        const arrow = document.querySelector('.collapse-arrow')!;
+
+        details.classList.toggle('collapsed');
+        arrow.classList.toggle('expanded');
+      });
+
+      // Add savings button
+      document.getElementById('addSavingsButton')!.addEventListener('click', () => {
+        stateManager.addSavingsItem('', 0);
+      });
+
       // Populate initial values from loaded state
       const initialState = stateManager.getState();
       inputs.forEach((input) => {
@@ -319,7 +411,6 @@ import '../styles/calculator.css';
           if (navigator.share) {
             await navigator.share({
               title: 'מחשבון רכישת דירה',
-              text: 'החישוב שלי לרכישת דירה',
               url: shareUrl,
             });
           } else {
@@ -358,12 +449,26 @@ import '../styles/calculator.css';
               inputElement.value = '';
             }
           });
+
+          // Savings list will be cleared by the subscribe callback
         }
       });
+
+      // Keep track of previous savings list length to detect changes
+      let previousSavingsListLength = stateManager.getState().otherSavingsList.length;
 
       // Subscribe to state changes and update UI
       stateManager.subscribe((state) => {
         const results = state.results;
+
+        // Only re-render savings list if the list changed (item added/removed)
+        if (state.otherSavingsList.length !== previousSavingsListLength) {
+          renderSavingsList();
+          previousSavingsListLength = state.otherSavingsList.length;
+        }
+
+        // Update other savings total display
+        document.getElementById('otherSavingsTotal')!.textContent = formatCurrency(state.otherSavings);
 
         if (!results) {
           return;
@@ -416,6 +521,9 @@ import '../styles/calculator.css';
           }
         }
       });
+
+      // Initial render of savings list
+      renderSavingsList();
 
       // Initial calculation
       stateManager.forceRecalculate();

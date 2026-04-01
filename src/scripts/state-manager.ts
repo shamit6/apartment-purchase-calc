@@ -8,12 +8,19 @@ import {
 
 export type CalculationMode = 'FROM_APARTMENT_PRICE' | 'FROM_MORTGAGE';
 
+export interface SavingsItem {
+  id: string;
+  name: string;
+  amount: number;
+}
+
 export interface State {
   // Part 1: Equity inputs
   currentApartmentValue: number;
   studyFundAmount: number;
   studyFundLoan: boolean;
-  otherSavings: number;
+  otherSavings: number; // Computed total, kept for backward compatibility
+  otherSavingsList: SavingsItem[]; // Detailed list
   currentMortgage: number;
 
   // Part 2: Purchase inputs
@@ -51,6 +58,7 @@ export class StateManager {
       studyFundAmount: 0,
       studyFundLoan: false,
       otherSavings: 0,
+      otherSavingsList: [],
       currentMortgage: 0,
       apartmentPrice: 0,
       brokerageFeeRate: 0.02, // 2%
@@ -69,9 +77,17 @@ export class StateManager {
       this.loadedFromUrl = true;
       // Don't mark mortgage as manually set - allow it to auto-sync
       this.mortgageManuallySet = false;
+      // Ensure otherSavingsList exists
+      if (!this.state.otherSavingsList) {
+        this.state.otherSavingsList = [];
+      }
     } else {
       this.state = this.loadFromStorage() || defaultState;
       this.loadedFromUrl = false;
+      // Ensure otherSavingsList exists (for backward compatibility)
+      if (!this.state.otherSavingsList) {
+        this.state.otherSavingsList = [];
+      }
     }
   }
 
@@ -85,11 +101,43 @@ export class StateManager {
         return null;
       }
 
+      const otherSavingsTotal = Number(params.get('os')) || 0;
+
+      // Load savings list from URL params (osn0, osa0, osn1, osa1, etc.)
+      const otherSavingsList: SavingsItem[] = [];
+      let index = 0;
+      while (params.has(`osn${index}`) || params.has(`osa${index}`)) {
+        const name = params.get(`osn${index}`) || '';
+        const amountStr = params.get(`osa${index}`) || '';
+
+        // Extract only numbers from the string (handles cases where text is appended)
+        const numericOnly = amountStr.replace(/[^\d.]/g, '');
+        const amount = Number(numericOnly) || 0;
+
+        otherSavingsList.push({
+          id: 'url-load-' + index + '-' + Date.now(),
+          name,
+          amount
+        });
+
+        index++;
+      }
+
+      // If no detailed list in URL but there's a total, create a placeholder
+      if (otherSavingsList.length === 0 && otherSavingsTotal > 0) {
+        otherSavingsList.push({
+          id: 'url-load-' + Date.now(),
+          name: 'חסכונות (מקישור)',
+          amount: otherSavingsTotal
+        });
+      }
+
       const state: Partial<State> = {
         currentApartmentValue: Number(params.get('cav')) || 0,
         studyFundAmount: Number(params.get('sfa')) || 0,
         studyFundLoan: params.get('sfl') === '1',
-        otherSavings: Number(params.get('os')) || 0,
+        otherSavings: otherSavingsTotal,
+        otherSavingsList,
         currentMortgage: Number(params.get('cm')) || 0,
         apartmentPrice: Number(params.get('ap')) || 0,
         brokerageFeeRate: Number(params.get('bfr')) || 0.02,
@@ -118,6 +166,10 @@ export class StateManager {
         const parsed = JSON.parse(stored);
         // Don't restore results, recalculate them
         parsed.results = null;
+        // Ensure otherSavingsList exists (for backward compatibility)
+        if (!parsed.otherSavingsList) {
+          parsed.otherSavingsList = [];
+        }
         return parsed;
       }
     } catch (error) {
@@ -154,6 +206,7 @@ export class StateManager {
       studyFundAmount: 0,
       studyFundLoan: false,
       otherSavings: 0,
+      otherSavingsList: [],
       currentMortgage: 0,
       apartmentPrice: 0,
       brokerageFeeRate: 0.02,
@@ -179,6 +232,100 @@ export class StateManager {
     // Recalculate and notify
     this.recalculate();
     this.notify();
+  }
+
+  /**
+   * Add a new savings item
+   */
+  addSavingsItem(name: string = '', amount: number = 0): string {
+    if (this.isUpdating) return '';
+
+    this.isUpdating = true;
+
+    // First user change after URL load - clear the flag
+    if (this.loadedFromUrl) {
+      this.loadedFromUrl = false;
+    }
+
+    const id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+    const newItem: SavingsItem = { id, name, amount };
+
+    this.state.otherSavingsList.push(newItem);
+    this.updateOtherSavingsTotalInternal();
+
+    this.isUpdating = false;
+
+    return id;
+  }
+
+  /**
+   * Update a savings item
+   */
+  updateSavingsItem(id: string, name: string, amount: number): void {
+    if (this.isUpdating) return;
+
+    this.isUpdating = true;
+
+    // First user change after URL load - clear the flag
+    if (this.loadedFromUrl) {
+      this.loadedFromUrl = false;
+    }
+
+    const item = this.state.otherSavingsList.find(item => item.id === id);
+    if (item) {
+      item.name = name;
+      item.amount = amount;
+      this.updateOtherSavingsTotalInternal();
+    }
+
+    this.isUpdating = false;
+  }
+
+  /**
+   * Remove a savings item
+   */
+  removeSavingsItem(id: string): void {
+    if (this.isUpdating) return;
+
+    this.isUpdating = true;
+
+    // First user change after URL load - clear the flag
+    if (this.loadedFromUrl) {
+      this.loadedFromUrl = false;
+    }
+
+    this.state.otherSavingsList = this.state.otherSavingsList.filter(item => item.id !== id);
+    this.updateOtherSavingsTotalInternal();
+
+    this.isUpdating = false;
+  }
+
+  /**
+   * Update the total other savings from the list (internal use)
+   */
+  private updateOtherSavingsTotalInternal(): void {
+    this.state.otherSavings = this.state.otherSavingsList.reduce(
+      (sum, item) => sum + item.amount,
+      0
+    );
+
+    // Recalculate
+    this.recalculate();
+
+    // If mortgage hasn't been manually set, update it to the required amount
+    if (!this.mortgageManuallySet && this.state.results) {
+      const oldMortgage = this.state.mortgageAmount;
+      const newMortgage = this.state.results.mortgage;
+
+      if (Math.abs(oldMortgage - newMortgage) > 0.01) {
+        this.state.mortgageAmount = newMortgage;
+        this.recalculate();
+      }
+    }
+
+    // Notify and save
+    this.notify();
+    this.saveToStorage();
   }
 
   /**
@@ -309,6 +456,12 @@ export class StateManager {
     params.set('ma', String(this.state.mortgageAmount));
     params.set('ir', String(this.state.interestRate));
     params.set('ly', String(this.state.loanYears));
+
+    // Add savings list items
+    this.state.otherSavingsList.forEach((item, index) => {
+      params.set(`osn${index}`, item.name);
+      params.set(`osa${index}`, String(item.amount));
+    });
 
     const baseUrl = window.location.origin + window.location.pathname;
     return `${baseUrl}?${params.toString()}`;
