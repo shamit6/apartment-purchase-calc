@@ -70,6 +70,35 @@ h1 {
   text-align: center;
 }
 
+/* Share container and button at bottom */
+.share-container {
+  margin-top: 0.75rem;
+  text-align: center;
+}
+
+.share-button {
+  padding: 0.75rem 2rem;
+  background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 12px rgba(66, 153, 225, 0.3);
+  min-width: 200px;
+}
+
+.share-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(66, 153, 225, 0.5);
+}
+
+.share-button:active {
+  transform: translateY(0);
+}
+
 .clear-button {
   padding: 0.5rem 1rem;
   background: linear-gradient(135deg, #f56565 0%, #c53030 100%);
@@ -350,6 +379,11 @@ h1 {
 
   .clear-button {
     width: 100%;
+  }
+
+  .share-button {
+    width: 100%;
+    min-width: unset;
   }
 
   .section {

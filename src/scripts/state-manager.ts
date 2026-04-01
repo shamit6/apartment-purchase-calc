@@ -60,8 +60,41 @@ export class StateManager {
       results: null,
     };
 
-    // Load from localStorage if available
-    this.state = this.loadFromStorage() || defaultState;
+    // Try to load from URL params first, then localStorage
+    this.state = this.loadFromUrlParams() || this.loadFromStorage() || defaultState;
+  }
+
+  /**
+   * Load state from URL query parameters
+   */
+  private loadFromUrlParams(): State | null {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (!params.has('share')) {
+        return null;
+      }
+
+      const state: Partial<State> = {
+        currentApartmentValue: Number(params.get('cav')) || 0,
+        studyFundAmount: Number(params.get('sfa')) || 0,
+        studyFundLoan: params.get('sfl') === '1',
+        otherSavings: Number(params.get('os')) || 0,
+        currentMortgage: Number(params.get('cm')) || 0,
+        apartmentPrice: Number(params.get('ap')) || 0,
+        brokerageFeeRate: Number(params.get('bfr')) || 0.02,
+        additionalCosts: Number(params.get('ac')) || 0,
+        mortgageAmount: Number(params.get('ma')) || 0,
+        interestRate: Number(params.get('ir')) || 0.045,
+        loanYears: Number(params.get('ly')) || 30,
+        mode: 'FROM_APARTMENT_PRICE',
+        results: null,
+      };
+
+      return state as State;
+    } catch (error) {
+      console.error('Failed to load from URL params:', error);
+    }
+    return null;
   }
 
   /**
@@ -227,5 +260,27 @@ export class StateManager {
     this.notify();
     this.saveToStorage();
     this.isUpdating = false;
+  }
+
+  /**
+   * Generate shareable URL with current state as query parameters
+   */
+  getShareableUrl(): string {
+    const params = new URLSearchParams();
+    params.set('share', '1');
+    params.set('cav', String(this.state.currentApartmentValue));
+    params.set('sfa', String(this.state.studyFundAmount));
+    params.set('sfl', this.state.studyFundLoan ? '1' : '0');
+    params.set('os', String(this.state.otherSavings));
+    params.set('cm', String(this.state.currentMortgage));
+    params.set('ap', String(this.state.apartmentPrice));
+    params.set('bfr', String(this.state.brokerageFeeRate));
+    params.set('ac', String(this.state.additionalCosts));
+    params.set('ma', String(this.state.mortgageAmount));
+    params.set('ir', String(this.state.interestRate));
+    params.set('ly', String(this.state.loanYears));
+
+    const baseUrl = window.location.origin + window.location.pathname;
+    return `${baseUrl}?${params.toString()}`;
   }
 }
